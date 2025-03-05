@@ -5,6 +5,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+// To use the main App:
 root.render(
   <React.StrictMode>
     <App />
@@ -15,3 +17,13 @@ root.render(
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
+
+// Uncomment this to use ExamplePage instead of App
+/*
+import ExamplePage from './ExamplePage';
+root.render(
+  <React.StrictMode>
+    <ExamplePage />
+  </React.StrictMode>
+);
+*/
