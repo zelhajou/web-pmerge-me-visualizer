@@ -1,35 +1,41 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState } from "react";
 import ArrayVisualization from "./ArrayVisualization";
 import BinarySearchVisualization from "./BinarySearchVisualization";
 import { ChevronDown, ChevronUp, HelpCircle, AlertCircle } from 'lucide-react';
 
 const MemoryStateVisualization = ({ memoryState }) => {
-  if (!memoryState) return null;
-
-  // State for collapsible sections
+  // State for collapsible sections - must be at the top level
   const [showExplanations, setShowExplanations] = useState(true);
   const [showOperations, setShowOperations] = useState(true);
   const [showChanges, setShowChanges] = useState(true);
+  
+  if (!memoryState) return null;
 
   // Highlight the current active elements in the arrays
   const highlightActiveElements = (array, activeIndices = []) => {
-    return array.map((value, idx) => (
-      <div key={idx} className="flex flex-col items-center mr-1.5 mb-1.5">
-        <div
-          className={`${
-            activeIndices?.includes(idx) 
-              ? "ring-2 ring-red-500 shadow-sm" 
-              : "hover:bg-opacity-80"
-          } 
-             px-2.5 py-1 rounded-md font-mono text-sm transition-all
-             bg-purple-100 text-purple-800`}
-        >
-          {value}
+    return array.map((value, idx) => {
+      // Check if activeIndices contains the current index - handle different data types
+      const isActive = Array.isArray(activeIndices) 
+        ? activeIndices.includes(idx)
+        : activeIndices === idx;
+        
+      return (
+        <div key={idx} className="flex flex-col items-center mr-1.5 mb-1.5">
+          <div
+            className={`${
+              isActive 
+                ? "ring-2 ring-red-500 shadow-sm" 
+                : "hover:bg-opacity-80"
+            } 
+               px-2.5 py-1 rounded-md font-mono text-sm transition-all
+               bg-purple-100 text-purple-800`}
+          >
+            {value}
+          </div>
+          <div className="text-xs text-gray-500 mt-0.5">{idx}</div>
         </div>
-        <div className="text-xs text-gray-500 mt-0.5">{idx}</div>
-      </div>
-    ));
+      );
+    });
   };
 
   // Variable explanations - collapsible and improved
