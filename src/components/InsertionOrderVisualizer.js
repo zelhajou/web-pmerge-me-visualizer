@@ -860,6 +860,6 @@ const InsertionOrderVisualizer = () => {
       </div>
     </div>
   );
-}
+};
 
 export default InsertionOrderVisualizer;
