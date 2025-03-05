@@ -190,8 +190,8 @@ void PmergeMe::sortVector() {
         : highlightedCode.split('// Step 8:')[0] + "<br/><br/>// ... (more code)");
 
   return (
-    <div className="bg-white border rounded-md overflow-hidden shadow-md mb-4">
-      <div className="bg-gray-100 px-4 py-2 flex items-center justify-between border-b">
+    <div className="flex flex-col h-full bg-white border rounded-md overflow-hidden shadow-md">
+      <div className="flex-none bg-gray-100 px-4 py-2 flex items-center justify-between border-b">
         <div className="flex items-center">
           <Code size={20} className="mr-2 text-gray-700" />
           <span className="font-semibold text-gray-800">C++ Implementation (PmergeMe.cpp)</span>
@@ -213,20 +213,20 @@ void PmergeMe::sortVector() {
         </div>
       </div>
       
-      <div className="relative">
+      <div className="flex-1 relative overflow-hidden">
         {isLoading ? (
-          <div className="p-4 text-sm bg-gray-50 h-60 flex items-center justify-center">
+          <div className="p-4 text-sm bg-gray-50 h-full flex items-center justify-center">
             <div className="animate-pulse">Loading syntax highlighting...</div>
           </div>
         ) : (
           <pre 
-            className="p-4 text-sm overflow-x-auto bg-gray-50 max-h-[400px] overflow-y-auto font-mono leading-relaxed hljs"
+            className="p-4 text-sm bg-gray-50 h-full overflow-auto font-mono leading-relaxed hljs"
             dangerouslySetInnerHTML={{ __html: displayCode }}
           />
         )}
       </div>
       
-      <div className="bg-gray-100 px-4 py-2 border-t">
+      <div className="flex-none bg-gray-100 px-4 py-2 border-t">
         <div className="flex justify-between items-center">
           <div className="text-xs text-gray-600">
             <span className="font-semibold">Exercise 02:</span> PmergeMe - Ford-Johnson Algorithm C++98 Implementation

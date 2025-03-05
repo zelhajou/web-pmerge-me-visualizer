@@ -4,6 +4,7 @@ import CallStackVisualization from './CallStackVisualization';
 import CodeVisualization from './CodeVisualization';
 import MemoryStateVisualization from './MemoryStateVisualization';
 import JacobsthalVisualization from '../JacobsthalVisualization';
+import InsertionOrderVisualizer from '../InsertionOrderVisualizer';
 
 export {
   ArrayVisualization,
@@ -11,5 +12,6 @@ export {
   CallStackVisualization,
   CodeVisualization,
   MemoryStateVisualization,
-  JacobsthalVisualization
+  JacobsthalVisualization,
+  InsertionOrderVisualizer 
 };
