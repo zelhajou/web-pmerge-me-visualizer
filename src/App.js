@@ -376,7 +376,7 @@ const App = () => {
           PmergeMe Visualizer — Ford-Johnson Algorithm Implementation
         </p>
         <p className="text-xs text-gray-400 mt-1">
-          Designed for understanding merge-insert sort (<a href="https://github.com/zelhajou/ft_cpp_modules/tree/main/module 09/ex02">Module 09 - Exercise 02</a>)
+          Designed for understanding merge-insert sort (<a href="https://github.com/zelhajou/ft_cpp_modules/tree/main/module 09/ex02" target="_blank" rel="noopener noreferrer">Module 09 - Exercise 02</a>)
         </p>
       </footer>
     </div>
