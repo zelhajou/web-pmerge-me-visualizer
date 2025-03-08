@@ -5,64 +5,59 @@
  * Used in merge-insertion sort to optimize insertion order
  */
 export function getJacobsthalSequence(n) {
-    if (n <= 0) return [0];
-    if (n === 1) return [0, 1];
+  if (n <= 0) return [0];
+  if (n === 1) return [0, 1];
+
+  // Initialize with first two elements
+  const sequence = [0, 1];
+
+  // Calculate subsequent elements
+  for (let i = 2; i <= n; i++) {
+    const nextValue = sequence[i - 1] + 2 * sequence[i - 2];
+    sequence.push(nextValue);
+  }
+
+  return sequence;
+}
+
+/**
+ * Calculate insertion order using Jacobsthal sequence to match C++ implementation
+ * @param {Array} jacobSeq - Jacobsthal sequence
+ * @param {number} pairsSize - Number of pairs
+ * @returns {Array} - The calculated insertion order
+ */
+export function calculateInsertionOrder(jacobSeq, pairsSize) {
+  // Set up tracking variables
+  const insertionOrder = [];
+  const inserted = new Array(pairsSize).fill(false);
+  inserted[0] = true; // Mark first pair as already processed
+  
+  // First loop processes Jacobsthal numbers
+  for (let i = 1; i < jacobSeq.length; i++) {
+    const idx = jacobSeq[i];
     
-    // Initialize with first two elements
-    const sequence = [0, 1];
-    
-    // Calculate subsequent elements
-    for (let i = 2; i <= n; i++) {
-      const nextValue = sequence[i-1] + 2 * sequence[i-2];
-      sequence.push(nextValue);
+    // Check if index is within range and not yet inserted
+    if (idx < pairsSize && !inserted[idx]) {
+      insertionOrder.push(idx);
+      inserted[idx] = true;
     }
     
-    return sequence;
+    // Fill in between current and previous Jacobsthal numbers
+    const prev = jacobSeq[i-1];
+    for (let j = idx - 1; j > prev; j--) {
+      if (j >= 0 && j < pairsSize && !inserted[j]) {
+        insertionOrder.push(j);
+        inserted[j] = true;
+      }
+    }
   }
   
-  /**
-   * Calculate the insertion order for merge-insert sort based on Jacobsthal sequence
-   * @param {number} size - The number of elements to create insertion order for
-   * @returns {Array} - Optimal insertion order based on Jacobsthal sequence
-   */
-  export function calculateInsertionOrder(size) {
-    // If size is 0 or 1, no insertion needed
-    if (size <= 1) return [];
-    
-    // Generate Jacobsthal sequence large enough to cover size
-    let jacobsthalSize = 3;
-    while (getJacobsthalSequence(jacobsthalSize).slice(-1)[0] < size) {
-      jacobsthalSize++;
+  // Add any remaining indices that weren't processed
+  for (let i = 1; i < pairsSize; i++) {
+    if (!inserted[i]) {
+      insertionOrder.push(i);
     }
-    
-    const jacobSeq = getJacobsthalSequence(jacobsthalSize);
-    const insertionOrder = [];
-    const inserted = new Array(size).fill(false);
-    inserted[0] = true; // First element already in result
-    
-    // Use Jacobsthal numbers to determine insertion order
-    for (let i = 1; i < jacobSeq.length && jacobSeq[i] < size; i++) {
-      const idx = jacobSeq[i];
-      if (!inserted[idx]) {
-        insertionOrder.push(idx);
-        inserted[idx] = true;
-      }
-      
-      // Fill in intermediate values in descending order
-      for (let j = idx - 1; j > jacobSeq[i-1]; j--) {
-        if (j >= 0 && j < size && !inserted[j]) {
-          insertionOrder.push(j);
-          inserted[j] = true;
-        }
-      }
-    }
-    
-    // Add any remaining uninserted indices
-    for (let i = 1; i < size; i++) {
-      if (!inserted[i]) {
-        insertionOrder.push(i);
-      }
-    }
-    
-    return insertionOrder;
   }
+  
+  return insertionOrder;
+}
