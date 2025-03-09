@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAlgorithm } from "./hooks/useAlgorithm";
-import { usePlayback } from "./hooks/usePlayback";
+import { CodeSquare, Code, GitBranch } from "lucide-react";
 import { AlgorithmControls } from "./components/Algorithm";
 import AlgorithmStepDetail from "./components/Algorithm/AlgorithmStepDetail";
 import AlgorithmComparison from "./components/AlgorithmComparison";
@@ -11,18 +10,10 @@ import {
   CallStackVisualization,
 } from "./components/Visualization";
 import InsertionOrderVisualizer from "./components/InsertionOrderVisualizer";
-import {
-  ChevronLeft,
-  ChevronRight,
-  SkipBack,
-  SkipForward,
-  Play,
-  Pause,
-  RefreshCw,
-  Code,
-  GitBranch,
-  CodeSquare,
-} from "lucide-react";
+
+// Custom hook imports
+import { usePlayback } from "./hooks/usePlayback";
+import { generateAlgorithmSteps } from "./utils/algorithmSteps";
 
 const App = () => {
   // Get the initial input array from the URL or use default
@@ -36,6 +27,9 @@ const App = () => {
   const [activeView, setActiveView] = useState("algorithm"); // 'algorithm', 'code', 'insertionOrder'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [inputArray, setInputArray] = useState(initialArray);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [executionSteps, setExecutionSteps] = useState([]);
 
   // Handle window resize
   useEffect(() => {
@@ -44,19 +38,25 @@ const App = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Generate algorithm steps when input array changes
+  useEffect(() => {
+    const steps = generateAlgorithmSteps(inputArray);
+    setExecutionSteps(steps);
+    setCurrentStep(0);
+  }, [inputArray]);
+
   const isMobile = windowWidth < 768;
 
-  // Use the custom hooks
-  const {
-    inputArray,
-    setInputArray,
-    currentStep,
-    currentStepData,
-    executionSteps,
-    setCurrentStep,
-    processNewInput,
-  } = useAlgorithm(initialArray);
+  // Get current step data
+  const currentStepData = executionSteps[currentStep] || {
+    title: "Loading...",
+    description: "Preparing algorithm steps",
+    code: "",
+    memoryState: {},
+    callStack: ["main()"],
+  };
 
+  // Use the playback hook
   const {
     isPlaying,
     playbackSpeed,
@@ -73,7 +73,6 @@ const App = () => {
     const input = e.target.value.split(",").map((num) => parseInt(num.trim()));
     if (input.every((num) => !isNaN(num))) {
       setInputArray(input);
-      processNewInput(input);
 
       // Update URL for sharing
       const url = new URL(window.location);
@@ -89,7 +88,6 @@ const App = () => {
       Math.floor(Math.random() * 100)
     );
     setInputArray(randomArray);
-    processNewInput(randomArray);
   };
 
   // Toggle mobile menu
@@ -115,7 +113,7 @@ const App = () => {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
             <CodeSquare className="mr-2 text-blue-600" />
-            Ford-Johnson Visualizer
+            PmergeMe Visualizer
           </h1>
 
           {/* Mobile menu button */}
@@ -197,145 +195,37 @@ const App = () => {
       )}
 
       <main className="flex-1 overflow-hidden container mx-auto px-4 py-4 flex flex-col">
-        {/* Controls Section with improved visual hierarchy */}
-
-
         {/* Main Content Area - Changes based on active view */}
         <div className="flex-1 overflow-hidden">
           {activeView === "algorithm" && (
             <div className="h-full flex flex-col">
-        <div className="mb-4 bg-white p-3 rounded-lg shadow-sm border">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div className="flex flex-col flex-grow">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Input Array:
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  className="flex-grow px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={inputArray.join(", ")}
-                  onChange={handleInputChange}
-                  placeholder="Enter numbers separated by commas"
+              <div className="mb-4 bg-white p-3 rounded-lg shadow-sm border">
+                <AlgorithmControls
+                  inputArray={inputArray}
+                  handleInputChange={handleInputChange}
+                  generateRandomArray={generateRandomArray}
+                  playbackSpeed={playbackSpeed}
+                  setPlaybackSpeed={setPlaybackSpeed}
+                  isPlaying={isPlaying}
+                  togglePlayback={togglePlayback}
+                  goToFirstStep={goToFirstStep}
+                  goToLastStep={goToLastStep}
+                  goToNextStep={goToNextStep}
+                  goToPrevStep={goToPrevStep}
+                  currentStep={currentStep}
+                  totalSteps={executionSteps.length}
                 />
-                <button
-                  onClick={generateRandomArray}
-                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center"
-                  title="Generate random array for testing"
-                >
-                  <RefreshCw size={16} className="mr-1" />
-                  <span className="hidden sm:inline">Random</span>
-                </button>
               </div>
-            </div>
-
-            {/* Playback controls with a better layout */}
-            <div className="flex items-center bg-gray-50 p-2 rounded-md border gap-2">
-              <button
-                onClick={goToFirstStep}
-                className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={currentStep === 0}
-                title="First Step"
-              >
-                <SkipBack size={16} />
-              </button>
-              <button
-                onClick={goToPrevStep}
-                className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={currentStep === 0}
-                title="Previous Step"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={togglePlayback}
-                className={`p-1.5 flex items-center gap-1 px-3 rounded-md text-sm font-medium
-                  ${
-                    isPlaying
-                      ? "bg-red-100 text-red-700 hover:bg-red-200"
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  }`}
-                title={isPlaying ? "Pause" : "Play"}
-              >
-                {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                <span>{isPlaying ? "Pause" : "Play"}</span>
-              </button>
-              <button
-                onClick={goToNextStep}
-                className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={currentStep === executionSteps.length - 1}
-                title="Next Step"
-              >
-                <ChevronRight size={16} />
-              </button>
-              <button
-                onClick={goToLastStep}
-                className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={currentStep === executionSteps.length - 1}
-                title="Last Step"
-              >
-                <SkipForward size={16} />
-              </button>
-              <select
-                className="text-xs border rounded-md bg-white p-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={playbackSpeed}
-                onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-                title="Playback Speed"
-              >
-                <option value="0.5">0.5×</option>
-                <option value="1">1×</option>
-                <option value="1.5">1.5×</option>
-                <option value="2">2×</option>
-              </select>
-              <span className="text-xs font-medium text-gray-600 mx-1 whitespace-nowrap">
-                Step {currentStep + 1}/{executionSteps.length}
-              </span>
-            </div>
-          </div>
-        </div>
 
               {/* Step Information with improved visual design */}
               <div className="mb-4 bg-white border rounded-lg overflow-hidden shadow-sm">
-                <div className="border-b p-3 ">
-                  <h2 className="text-lg font-bold text-gray-800">
-                    {currentStepData.title}
-                  </h2>
-                  <p className="text-gray-600 text-sm">
-                    {currentStepData.description}
-                  </p>
-
-                  {/* Progress indicators */}
-                  <div className="flex justify-between text-xs text-gray-500 mt-2 mb-1">
-                    <span>Start</span>
-                    <span>Pair Formation</span>
-                    <span>Main Chain</span>
-                    <span>Insertion</span>
-                    <span>Complete</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{
-                        width: `${
-                          ((currentStep + 1) / executionSteps.length) * 100
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Operations summary for better context */}
-                {currentStepData.memoryState?.operations && (
-                  <div className="p-3 bg-gray-50 border-b text-sm">
-                    <h3 className="font-semibold mb-1">Current Operations:</h3>
-                    <ul className="list-disc list-inside space-y-0.5 text-gray-700">
-                      {currentStepData.memoryState.operations.map((op, idx) => (
-                        <li key={idx}>{op}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <AlgorithmStepDetail
+                  step={currentStepData}
+                  currentStep={currentStep}
+                  totalSteps={executionSteps.length}
+                />
               </div>
+              
               {/* Main visualization area */}
               <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Left: Code and Call Stack */}
@@ -376,7 +266,7 @@ const App = () => {
           PmergeMe Visualizer — Ford-Johnson Algorithm Implementation
         </p>
         <p className="text-xs text-gray-400 mt-1">
-          Designed for understanding merge-insert sort (<a href="https://github.com/zelhajou/ft_cpp_modules/tree/main/module 09/ex02" target="_blank" rel="noopener noreferrer">Module 09 - Exercise 02</a>)
+          Updated to match the C++ implementation in PmergeMe.cpp
         </p>
       </footer>
     </div>

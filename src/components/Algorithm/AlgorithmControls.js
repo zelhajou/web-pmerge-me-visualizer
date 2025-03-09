@@ -1,9 +1,10 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Play, Pause } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Play, Pause, RefreshCw } from 'lucide-react';
 
 const AlgorithmControls = ({
   inputArray,
   handleInputChange,
+  generateRandomArray,
   playbackSpeed,
   setPlaybackSpeed,
   isPlaying,
@@ -16,77 +17,87 @@ const AlgorithmControls = ({
   totalSteps
 }) => {
   return (
-    <div className="mb-6 p-4 bg-gray-50 rounded-md shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Input Array:</label>
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex flex-col flex-grow">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Input Array:
+        </label>
+        <div className="flex gap-2">
           <input
             type="text"
-            className="w-full px-3 py-2 border rounded-md"
-            value={inputArray.join(', ')}
+            className="flex-grow px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={inputArray.join(", ")}
             onChange={handleInputChange}
             placeholder="Enter numbers separated by commas"
           />
-          <p className="text-xs text-gray-500 mt-1">Example: 5, 3, 8, 2, 1, 9, 4</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Playback Speed:</label>
-          <select
-            className="px-3 py-2 border rounded-md"
-            value={playbackSpeed}
-            onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
+          <button
+            onClick={generateRandomArray}
+            className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center"
+            title="Generate random array for testing"
           >
-            <option value="0.5">0.5x</option>
-            <option value="1">1x</option>
-            <option value="1.5">1.5x</option>
-            <option value="2">2x</option>
-            <option value="3">3x</option>
-          </select>
+            <RefreshCw size={16} className="mr-1" />
+            <span className="hidden sm:inline">Random</span>
+          </button>
         </div>
       </div>
-      
-      {/* Navigation controls */}
-      <div className="flex justify-center items-center mt-4 gap-2">
-        <button 
+
+      {/* Playback controls with a better layout */}
+      <div className="flex items-center bg-gray-50 p-2 rounded-md border gap-2">
+        <button
           onClick={goToFirstStep}
-          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+          className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={currentStep === 0}
           title="First Step"
         >
-          <SkipBack size={18} />
+          <SkipBack size={16} />
         </button>
-        <button 
+        <button
           onClick={goToPrevStep}
-          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-md"
-          title="Previous Step"
+          className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
           disabled={currentStep === 0}
+          title="Previous Step"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={16} />
         </button>
-        <button 
+        <button
           onClick={togglePlayback}
-          className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-md flex items-center gap-1 px-3"
+          className={`p-1.5 flex items-center gap-1 px-3 rounded-md text-sm font-medium
+            ${isPlaying ? "bg-red-100 text-red-700 hover:bg-red-200" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
+          title={isPlaying ? "Pause" : "Play"}
         >
-          {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
           <span>{isPlaying ? "Pause" : "Play"}</span>
         </button>
-        <button 
+        <button
           onClick={goToNextStep}
-          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-md"
-          title="Next Step"
+          className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
           disabled={currentStep === totalSteps - 1}
+          title="Next Step"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={16} />
         </button>
-        <button 
+        <button
           onClick={goToLastStep}
-          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-md"
+          className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={currentStep === totalSteps - 1}
           title="Last Step"
         >
-          <SkipForward size={18} />
+          <SkipForward size={16} />
         </button>
-        <div className="ml-4 text-sm text-gray-700">
-          Step {currentStep + 1} of {totalSteps}
-        </div>
+        <select
+          className="text-xs border rounded-md bg-white p-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          value={playbackSpeed}
+          onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
+          title="Playback Speed"
+        >
+          <option value="0.5">0.5×</option>
+          <option value="1">1×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+        <span className="text-xs font-medium text-gray-600 mx-1 whitespace-nowrap">
+          Step {currentStep + 1}/{totalSteps}
+        </span>
       </div>
     </div>
   );

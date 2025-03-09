@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import ArrayVisualization from "./ArrayVisualization";
-import BinarySearchVisualization from "./BinarySearchVisualization";
 import { ChevronDown, ChevronUp, HelpCircle, AlertCircle } from 'lucide-react';
 
 const MemoryStateVisualization = ({ memoryState }) => {
-  // State for collapsible sections - must be at the top level
+  // State for collapsible sections
   const [showExplanations, setShowExplanations] = useState(true);
   const [showOperations, setShowOperations] = useState(true);
   const [showChanges, setShowChanges] = useState(true);
@@ -22,11 +20,9 @@ const MemoryStateVisualization = ({ memoryState }) => {
       return (
         <div key={idx} className="flex flex-col items-center mr-1.5 mb-1.5">
           <div
-            className={`${
-              isActive 
-                ? "ring-2 ring-red-500 shadow-sm" 
-                : "hover:bg-opacity-80"
-            } 
+            className={`${isActive 
+              ? "ring-2 ring-red-500 shadow-sm" 
+              : "hover:bg-opacity-80"} 
                px-2.5 py-1 rounded-md font-mono text-sm transition-all
                bg-purple-100 text-purple-800`}
           >
@@ -45,6 +41,7 @@ const MemoryStateVisualization = ({ memoryState }) => {
       straggler: "Element removed from odd-sized array",
       pairs: "Pairs from consecutive elements",
       mainChain: "Larger elements from each pair",
+      pendChain: "Smaller elements from each pair",
       result: "Array being built during insertion",
       jacobsthal: "Sequence for insertion order",
       insertionOrder: "Order for inserting elements",
@@ -180,9 +177,9 @@ const MemoryStateVisualization = ({ memoryState }) => {
     return pairs.map((pair, idx) => (
       <div key={idx} className="flex flex-col items-center mr-2 mb-2">
         <div
-          className={`${
-            activeIndex === idx ? "ring-2 ring-red-500 shadow-sm" : "hover:bg-opacity-80"
-          } 
+          className={`${activeIndex === idx 
+          ? "ring-2 ring-red-500 shadow-sm" 
+          : "hover:bg-opacity-80"} 
           bg-blue-100 px-2.5 py-1 rounded-md text-blue-800 font-mono text-sm flex transition-all`}
         >
           ({pair[0]}, {pair[1]})
@@ -197,9 +194,9 @@ const MemoryStateVisualization = ({ memoryState }) => {
     return sequence.map((value, idx) => (
       <div key={idx} className="flex flex-col items-center mr-1.5 mb-1.5">
         <div
-          className={`${
-            activeIndex === idx ? "ring-2 ring-red-500 shadow-sm" : "hover:bg-opacity-80"
-          } 
+          className={`${activeIndex === idx 
+          ? "ring-2 ring-red-500 shadow-sm" 
+          : "hover:bg-opacity-80"} 
           bg-indigo-100 px-2.5 py-1 rounded-md text-indigo-800 font-mono text-sm transition-all`}
         >
           {value}
@@ -207,6 +204,32 @@ const MemoryStateVisualization = ({ memoryState }) => {
         <div className="text-xs text-gray-500 mt-0.5">J({idx})</div>
       </div>
     ));
+  };
+
+  // Binary search visualization
+  const renderBinarySearch = () => {
+    if (!memoryState.binarySearch) return null;
+    const binarySearch = memoryState.binarySearch;
+
+    return (
+      <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+        <h3 className="font-semibold text-blue-700 mb-1">Binary Search:</h3>
+        <div className="text-sm">
+          <p className="mb-1">Searching for: <span className="font-mono bg-blue-100 px-1 py-0.5 rounded">{binarySearch.value}</span></p>
+          <p className="mb-1">In array: {binarySearch.array.join(', ')}</p>
+          <div className="bg-white p-2 rounded border border-blue-100">
+            <p className="font-medium mb-1 text-xs">Steps:</p>
+            <ol className="list-decimal list-inside text-xs">
+              {binarySearch.steps.map((step, idx) => (
+                <li key={idx} className={idx === binarySearch.steps.length - 1 ? "text-green-700 font-bold" : ""}>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Determine if there are variable changes or operations
@@ -249,56 +272,47 @@ const MemoryStateVisualization = ({ memoryState }) => {
           </div>
         )}
 
-        {/* Memory variables section */}
+        {/* Binary search visualization */}
+        {memoryState.binarySearch && renderBinarySearch()}
+        
+        {/* Memory state variables section */}
         <div className="space-y-0.5 pb-2 divide-y divide-gray-100">
           {/* _vec array */}
           {renderMemoryVariable("_vec", memoryState._vec, "bg-purple-100 text-purple-800", memoryState.activeIndices?.vec)}
-
+          
           {/* Straggler */}
-          {memoryState.straggler !== undefined && (
+          {memoryState.straggler !== undefined && memoryState.straggler !== null && (
             <div className="flex items-center py-1.5 px-1 hover:bg-gray-50 rounded-md border border-transparent hover:border-gray-200 transition-colors">
               <span className="font-mono font-bold mr-2 w-20 text-sm text-gray-700">straggler:</span>
               <div
-                className={`${
-                  memoryState.activeIndices?.straggler ? "ring-2 ring-red-500 shadow-sm" : "hover:bg-opacity-80"
-                } 
+                className={`${memoryState.activeIndices?.straggler 
+                ? "ring-2 ring-red-500 shadow-sm" 
+                : "hover:bg-opacity-80"} 
                 bg-yellow-100 px-2.5 py-1 rounded-md text-yellow-800 font-mono text-sm transition-all`}
               >
-                {memoryState.straggler !== null ? memoryState.straggler : "null"}
+                {memoryState.straggler}
               </div>
             </div>
           )}
-
+          
           {/* Pairs */}
           {renderMemoryVariable("pairs", memoryState.pairs, "bg-blue-100 text-blue-800", memoryState.activeIndices?.pairs, renderPairs)}
-
+          
           {/* Main Chain */}
           {renderMemoryVariable("mainChain", memoryState.mainChain, "bg-green-100 text-green-800", memoryState.activeIndices?.mainChain)}
-
-          {/* Result */}
-          {renderMemoryVariable("result", memoryState.result, "bg-red-100 text-red-800", memoryState.activeIndices?.result)}
-
+          
+          {/* Pending Chain - NEW for PmergeMe implementation */}
+          {renderMemoryVariable("pendChain", memoryState.pendChain, "bg-pink-100 text-pink-800", memoryState.activeIndices?.pendChain)}
+          
           {/* Jacobsthal Sequence */}
           {renderMemoryVariable("jacobsthal", memoryState.jacobsthal, "bg-indigo-100 text-indigo-800", memoryState.activeIndices?.jacobsthal, renderJacobsthal)}
-
+          
           {/* Insertion Order */}
-          {renderMemoryVariable("insertion", memoryState.insertionOrder, "bg-pink-100 text-pink-800", memoryState.activeIndices?.insertionOrder)}
+          {renderMemoryVariable("insertionOrder", memoryState.insertionOrder, "bg-orange-100 text-orange-800", memoryState.activeIndices?.insertionOrder)}
+          
+          {/* Result */}
+          {renderMemoryVariable("result", memoryState.result, "bg-red-100 text-red-800", memoryState.activeIndices?.result)}
         </div>
-
-        {/* Binary Search Visualization - Enhanced and more visible */}
-        {memoryState.binarySearch && (
-          <div className="mt-3 border-t pt-3">
-            <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
-              <h3 className="font-semibold text-blue-800 mb-2 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Binary Search Visualization
-              </h3>
-              <BinarySearchVisualization binarySearch={memoryState.binarySearch} />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

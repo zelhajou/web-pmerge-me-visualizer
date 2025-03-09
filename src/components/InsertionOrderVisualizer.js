@@ -1,22 +1,20 @@
-// src/components/InsertionOrderVisualizer.js
-import React, { useState, useEffect } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  SkipBack, 
-  SkipForward, 
-  Play, 
-  Pause, 
-  Info, 
-  Code, 
-  List, 
+import React, { useState, useEffect } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  SkipBack,
+  SkipForward,
+  Play,
+  Pause,
+  Info,
+  Code,
+  List,
   CheckSquare,
   ChevronUp,
-  ChevronDown
-} from 'lucide-react';
+  ChevronDown,
+} from "lucide-react";
 
-
-// Import the JacobsthalGenerator component
+// Jacobsthal Generator Component - Matches the getJacob function in PmergeMe.cpp
 const JacobsthalGenerator = ({
   pairsSize,
   jacobsthalSequence,
@@ -49,10 +47,10 @@ const JacobsthalGenerator = ({
       });
     }
 
-    // Add computation steps
+    // Add computation steps - using the same formula as in getJacob
     for (let i = 2; i < jacobsthalSequence.length; i++) {
-      const prev1 = jacobsthalSequence[i - 1];
-      const prev2 = jacobsthalSequence[i - 2];
+      const prev1 = jacobsthalSequence[i - 1]; // lastNum
+      const prev2 = jacobsthalSequence[i - 2]; // secondLastNum
       generationSteps.push({
         index: i,
         value: jacobsthalSequence[i],
@@ -187,14 +185,14 @@ const JacobsthalGenerator = ({
                 disabled={currentStep === 0}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ⏮
+                <SkipBack size={12} />
               </button>
               <button
                 onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                 disabled={currentStep === 0}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ◀
+                <ChevronLeft size={12} />
               </button>
               <button
                 onClick={() =>
@@ -203,14 +201,14 @@ const JacobsthalGenerator = ({
                 disabled={currentStep >= steps.length - 1}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ▶
+                <ChevronRight size={12} />
               </button>
               <button
                 onClick={() => setCurrentStep(steps.length - 1)}
                 disabled={currentStep >= steps.length - 1}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ⏭
+                <SkipForward size={12} />
               </button>
             </div>
 
@@ -279,7 +277,7 @@ const JacobsthalGenerator = ({
 };
 
 const InsertionOrderVisualizer = () => {
-  // Example data to visualize
+  // State
   const [pairsSize, setPairsSize] = useState(8);
   const [currentStep, setCurrentStep] = useState(0);
   const [maxSteps, setMaxSteps] = useState(1);
@@ -305,113 +303,89 @@ const InsertionOrderVisualizer = () => {
   // Determine if we're on mobile view
   const isMobile = windowWidth < 768;
 
-  // Generate Jacobsthal sequence
-  const generateJacobsthalSequence = (n) => {
+  // Generate Jacobsthal sequence - matches getJacob in PmergeMe.cpp
+  const generateJacobsthalSequence = (size) => {
     const sequence = [0, 1];
-    for (let i = 2; i <= n; i++) {
-      sequence.push(sequence[i - 1] + 2 * sequence[i - 2]);
+    while (sequence[sequence.length - 1] < size) {
+      const lastNum = sequence[sequence.length - 1];
+      const secondLastNum = sequence[sequence.length - 2];
+      const next = lastNum + 2 * secondLastNum;
+      sequence.push(next);
     }
     return sequence;
   };
 
-  // Updated calculate insertion order function to match C++ implementation
+  // Calculate insertion order - matches getInsertPos in PmergeMe.cpp
   const calculateInsertionOrderWithSteps = (jacobSeq, pairsSize) => {
     const steps = [];
 
     // Initial state
     const insertionOrder = [];
-    const inserted = Array(pairsSize).fill(false);
-    inserted[0] = true; // Mark first pair as already processed
+    const used = Array(pairsSize).fill(false);
+    used[0] = true; // Mark first pair as already processed
 
     steps.push({
       stage: "Initial State",
       description: "Set up variables and mark first pair as already processed",
-      code: "std::vector<int> insertionOrder;\nstd::vector<bool> inserted(pairsSize, false);\ninserted[0] = true;",
+      code: "std::vector<int> order;\nstd::vector<bool> used(size, false);\nused[0] = true;",
       insertionOrder: [...insertionOrder],
-      inserted: [...inserted],
+      inserted: [...used],
       activeJacobIdx: null,
       activeIdx: null,
       activeJ: null,
       highlight: "setup",
     });
 
-    // First loop: Process Jacobsthal numbers - Updated to match C++ implementation
-    for (let i = 1; i < jacobSeq.length; i++) {
+    // Process Jacobsthal numbers
+    for (let i = 1; i < jacobSeq.length && jacobSeq[i] < pairsSize; i++) {
       const idx = jacobSeq[i];
 
       steps.push({
-        stage: `First Loop - Iteration ${i}`,
+        stage: `Jacobsthal Number - J(${i}) = ${idx}`,
         description: `Process Jacobsthal number J(${i}) = ${idx}`,
-        code: `for (size_t i = ${i}; i < jacobSeq.size(); i++) {\n    int idx = jacobSeq[i]; // idx = ${idx}`,
+        code: `for (size_t i = ${i}; i < jacobSeq.size() && jacobSeq[i] < static_cast<int>(size); i++) {\n    int idx = jacobSeq[i]; // ${idx}`,
         insertionOrder: [...insertionOrder],
-        inserted: [...inserted],
+        inserted: [...used],
         activeJacobIdx: i,
         activeIdx: idx,
         activeJ: null,
         highlight: "jacobsthal",
       });
 
-      // Updated to check idx < pairsSize inside loop body like the C++ version
       steps.push({
-        stage: `First Loop - Iteration ${i}`,
-        description: `Check if index ${idx} is within range of pairs size (${pairsSize})`,
-        code: `if (idx < (int)pairsSize && !inserted[idx]) {`,
+        stage: `Check Insertion Status - Index ${idx}`,
+        description: `Check if index ${idx} is already marked as used`,
+        code: `if (!used[${idx}]) {`,
         insertionOrder: [...insertionOrder],
-        inserted: [...inserted],
+        inserted: [...used],
         activeJacobIdx: i,
         activeIdx: idx,
         activeJ: null,
-        highlight: "range-check",
+        highlight: "condition-check",
       });
 
-      if (idx < pairsSize && !inserted[idx]) {
-        steps.push({
-          stage: `First Loop - Iteration ${i}`,
-          description: `Position ${idx} not yet inserted and is within range, add to insertion order`,
-          code: `    insertionOrder.push_back(${idx});\n    inserted[${idx}] = true;`,
-          insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
-          activeJacobIdx: i,
-          activeIdx: idx,
-          activeJ: null,
-          highlight: "condition-check",
-        });
-
+      if (!used[idx]) {
         insertionOrder.push(idx);
-        inserted[idx] = true;
+        used[idx] = true;
 
         steps.push({
-          stage: `First Loop - Iteration ${i}`,
-          description: `Added ${idx} to insertion order and marked as inserted`,
-          code: `insertionOrder.push_back(${idx});\ninserted[${idx}] = true;`,
+          stage: `Add Jacobsthal Index ${idx}`,
+          description: `Added ${idx} to insertion order and marked as used`,
+          code: `    order.push_back(${idx});\n    used[${idx}] = true;`,
           insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
+          inserted: [...used],
           activeJacobIdx: i,
           activeIdx: idx,
           activeJ: null,
           highlight: "add-element",
         });
-      } else if (idx >= pairsSize) {
-        steps.push({
-          stage: `First Loop - Iteration ${i}`,
-          description: `Position ${idx} exceeds pairs size (${pairsSize}), skipping but continuing loop`,
-          code: `// Position ${idx} > ${
-            pairsSize - 1
-          }, out of range, skip this index`,
-          insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
-          activeJacobIdx: i,
-          activeIdx: idx,
-          activeJ: null,
-          highlight: "out-of-range",
-        });
       } else {
         steps.push({
-          stage: `First Loop - Iteration ${i}`,
-          description: `Position ${idx} already inserted, skipping`,
-          code: `// Position ${idx} already marked as inserted, skip`,
+          stage: `Skip Index ${idx}`,
+          description: `Index ${idx} is already used, skipping`,
+          code: `    // Index ${idx} already marked as used, skipping`,
           insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
+          inserted: [...used],
           activeJacobIdx: i,
           activeIdx: idx,
           activeJ: null,
@@ -419,77 +393,62 @@ const InsertionOrderVisualizer = () => {
         });
       }
 
-      // Second nested loop: Fill in between Jacobsthal numbers
+      // Fill in between current and previous Jacobsthal numbers
       const prev = jacobSeq[i - 1];
 
       steps.push({
-        stage: `First Loop - Iteration ${i}`,
-        description: `Prepare to fill in between J(${
+        stage: `Fill Gap - Between ${prev} and ${idx}`,
+        description: `Prepare to fill indices between J(${
           i - 1
         })=${prev} and J(${i})=${idx}`,
         code: `// Fill in between Jacobsthal numbers in descending order\nfor (int j = ${idx} - 1; j > ${prev}; j--) {`,
         insertionOrder: [...insertionOrder],
-        inserted: [...inserted],
+        inserted: [...used],
         activeJacobIdx: i,
         activeIdx: idx,
         activeJ: null,
         highlight: "prepare-fill",
       });
 
+      // Fill in between in descending order
       for (let j = idx - 1; j > prev; j--) {
         steps.push({
-          stage: `First Loop - Iteration ${i}, Nested Loop - j=${j}`,
-          description: `Check position ${j} between J(${
-            i - 1
-          })=${prev} and J(${i})=${idx}`,
-          code: `for (int j = ${j}; j > ${prev}; j--) {\n    if (j >= 0 && j < pairsSize && !inserted[j]) {`,
+          stage: `Check Gap Index ${j}`,
+          description: `Check if index ${j} is within range and not yet used`,
+          code: `    if (j < (int)size && !used[j]) {`,
           insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
+          inserted: [...used],
           activeJacobIdx: i,
           activeIdx: idx,
           activeJ: j,
           highlight: "check-between",
         });
 
-        if (j >= 0 && j < pairsSize && !inserted[j]) {
-          steps.push({
-            stage: `First Loop - Iteration ${i}, Nested Loop - j=${j}`,
-            description: `Position ${j} not yet inserted, add to insertion order`,
-            code: `if (${j} >= 0 && ${j} < ${pairsSize} && !inserted[${j}]) {\n    // About to insert`,
-            insertionOrder: [...insertionOrder],
-            inserted: [...inserted],
-            activeJacobIdx: i,
-            activeIdx: idx,
-            activeJ: j,
-            highlight: "nested-check",
-          });
-
+        if (j < pairsSize && !used[j]) {
           insertionOrder.push(j);
-          inserted[j] = true;
+          used[j] = true;
 
           steps.push({
-            stage: `First Loop - Iteration ${i}, Nested Loop - j=${j}`,
-            description: `Added ${j} to insertion order and marked as inserted`,
-            code: `insertionOrder.push_back(${j});\ninserted[${j}] = true;`,
+            stage: `Add Gap Index ${j}`,
+            description: `Added ${j} to insertion order and marked as used`,
+            code: `        order.push_back(${j});\n        used[${j}] = true;`,
             insertionOrder: [...insertionOrder],
-            inserted: [...inserted],
+            inserted: [...used],
             activeJacobIdx: i,
             activeIdx: idx,
             activeJ: j,
             highlight: "nested-add",
           });
         } else {
-          let skipReason = "";
-          if (j < 0) skipReason = "j < 0";
-          else if (j >= pairsSize) skipReason = `j >= ${pairsSize}`;
-          else if (inserted[j]) skipReason = `inserted[${j}] is true`;
+          const skipReason =
+            j >= pairsSize ? `j >= ${pairsSize}` : `used[${j}] is true`;
 
           steps.push({
-            stage: `First Loop - Iteration ${i}, Nested Loop - j=${j}`,
-            description: `Position ${j} skipped: ${skipReason}`,
-            code: `// Skip: ${skipReason}`,
+            stage: `Skip Gap Index ${j}`,
+            description: `Index ${j} skipped: ${skipReason}`,
+            code: `        // Skip: ${skipReason}`,
             insertionOrder: [...insertionOrder],
-            inserted: [...inserted],
+            inserted: [...used],
             activeJacobIdx: i,
             activeIdx: idx,
             activeJ: j,
@@ -499,13 +458,13 @@ const InsertionOrderVisualizer = () => {
       }
 
       steps.push({
-        stage: `First Loop - Iteration ${i}`,
+        stage: `Completed Gap Filling`,
         description: `Completed filling between J(${
           i - 1
         })=${prev} and J(${i})=${idx}`,
-        code: `} // End of nested loop\n} // Continue with next Jacobsthal number`,
+        code: `    } // End nested loop\n} // End Jacobsthal loop`,
         insertionOrder: [...insertionOrder],
-        inserted: [...inserted],
+        inserted: [...used],
         activeJacobIdx: i,
         activeIdx: idx,
         activeJ: null,
@@ -513,14 +472,14 @@ const InsertionOrderVisualizer = () => {
       });
     }
 
-    // Final loop: Add any remaining indices
+    // Add any remaining indices
     steps.push({
-      stage: "Final Loop",
+      stage: "Add Remaining Indices",
       description:
         "Check for any remaining positions that haven't been inserted",
-      code: "// Add any remaining indices\nfor (size_t i = 1; i < pairsSize; i++) {",
+      code: "// Add any remaining indices\nfor (size_t i = 1; i < size; i++) {",
       insertionOrder: [...insertionOrder],
-      inserted: [...inserted],
+      inserted: [...used],
       activeJacobIdx: null,
       activeIdx: null,
       activeJ: null,
@@ -529,39 +488,27 @@ const InsertionOrderVisualizer = () => {
 
     for (let i = 1; i < pairsSize; i++) {
       steps.push({
-        stage: "Final Loop",
-        description: `Check if position ${i} has been inserted`,
-        code: `for (size_t i = ${i}; i < ${pairsSize}; i++) {\n    if (!inserted[${i}])`,
+        stage: `Check Remaining Index ${i}`,
+        description: `Check if index ${i} has been used`,
+        code: `    if (!used[${i}]) {`,
         insertionOrder: [...insertionOrder],
-        inserted: [...inserted],
+        inserted: [...used],
         activeJacobIdx: null,
         activeIdx: i,
         activeJ: null,
         highlight: "check-remaining",
       });
 
-      if (!inserted[i]) {
-        steps.push({
-          stage: "Final Loop",
-          description: `Position ${i} not yet inserted, add to insertion order`,
-          code: `if (!inserted[${i}]) {\n    // About to insert`,
-          insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
-          activeJacobIdx: null,
-          activeIdx: i,
-          activeJ: null,
-          highlight: "final-check",
-        });
-
+      if (!used[i]) {
         insertionOrder.push(i);
-        inserted[i] = true;
+        used[i] = true;
 
         steps.push({
-          stage: "Final Loop",
-          description: `Added ${i} to insertion order and marked as inserted`,
-          code: `insertionOrder.push_back(${i});\n    inserted[${i}] = true;`,
+          stage: `Add Remaining Index ${i}`,
+          description: `Added ${i} to insertion order and marked as used`,
+          code: `        order.push_back(${i});\n        used[${i}] = true;`,
           insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
+          inserted: [...used],
           activeJacobIdx: null,
           activeIdx: i,
           activeJ: null,
@@ -569,11 +516,11 @@ const InsertionOrderVisualizer = () => {
         });
       } else {
         steps.push({
-          stage: "Final Loop",
-          description: `Position ${i} already inserted, skipping`,
-          code: `// Position ${i} already marked as inserted, skip`,
+          stage: `Skip Remaining Index ${i}`,
+          description: `Index ${i} already used, skipping`,
+          code: `        // Skip: used[${i}] is true`,
           insertionOrder: [...insertionOrder],
-          inserted: [...inserted],
+          inserted: [...used],
           activeJacobIdx: null,
           activeIdx: i,
           activeJ: null,
@@ -586,9 +533,9 @@ const InsertionOrderVisualizer = () => {
     steps.push({
       stage: "Return Result",
       description: "Return the final insertion order",
-      code: "return insertionOrder; // " + JSON.stringify(insertionOrder),
+      code: "return order; // " + JSON.stringify(insertionOrder),
       insertionOrder: [...insertionOrder],
-      inserted: [...inserted],
+      inserted: [...used],
       activeJacobIdx: null,
       activeIdx: null,
       activeJ: null,
@@ -600,16 +547,8 @@ const InsertionOrderVisualizer = () => {
 
   // Process input changes
   useEffect(() => {
-    // Generate Jacobsthal sequence of appropriate size
-    let jacobSize = 5; // Start with a reasonable size
-    const jacobSeq = generateJacobsthalSequence(jacobSize);
-
-    // Make sure the sequence is large enough
-    while (jacobSeq[jacobSeq.length - 1] < pairsSize) {
-      jacobSize++;
-      jacobSeq.push(jacobSeq[jacobSize - 1] + 2 * jacobSeq[jacobSize - 2]);
-    }
-
+    // Generate Jacobsthal sequence - matches getJacob in PmergeMe.cpp
+    const jacobSeq = generateJacobsthalSequence(pairsSize);
     setJacobsthalSequence(jacobSeq);
 
     // Generate execution steps
@@ -651,20 +590,16 @@ const InsertionOrderVisualizer = () => {
     const colors = {
       setup: "bg-blue-100 text-blue-800 border-blue-200",
       jacobsthal: "bg-purple-100 text-purple-800 border-purple-200",
-      "range-check": "bg-orange-100 text-orange-800 border-orange-200",
       "condition-check": "bg-yellow-100 text-yellow-800 border-yellow-200",
       "add-element": "bg-green-100 text-green-800 border-green-200",
       "already-inserted": "bg-gray-100 text-gray-600 border-gray-200",
-      "out-of-range": "bg-red-50 text-red-600 border-red-100",
       "prepare-fill": "bg-indigo-100 text-indigo-800 border-indigo-200",
       "check-between": "bg-amber-100 text-amber-800 border-amber-200",
-      "nested-check": "bg-yellow-100 text-yellow-800 border-yellow-200",
       "nested-add": "bg-green-100 text-green-800 border-green-200",
       "nested-skip": "bg-red-100 text-red-800 border-red-200",
       "end-fill": "bg-gray-100 text-gray-600 border-gray-200",
       "final-loop": "bg-cyan-100 text-cyan-800 border-cyan-200",
       "check-remaining": "bg-teal-100 text-teal-800 border-teal-200",
-      "final-check": "bg-yellow-100 text-yellow-800 border-yellow-200",
       "final-add": "bg-green-100 text-green-800 border-green-200",
       "final-skip": "bg-red-100 text-red-800 border-red-200",
       return: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -681,10 +616,57 @@ const InsertionOrderVisualizer = () => {
           <div className="border rounded-lg overflow-hidden shadow-sm">
             <div className="bg-gray-100 px-4 py-2 font-medium border-b flex items-center">
               <Code size={16} className="mr-2" />
-              Current Code
+              C++ Implementation
             </div>
             <pre className="p-4 bg-gray-50 text-sm overflow-x-auto font-mono max-h-[400px]">
-              {currentStepData.code}
+              {`std::vector<int> PmergeMe::getJacob(size_t size)
+{
+    std::vector<int> jacobsthal;
+    jacobsthal.push_back(0);
+    jacobsthal.push_back(1);
+    
+    while (jacobsthal.back() < static_cast<int>(size))
+    {
+        int lastNum = jacobsthal.back();
+        int secondLastNum = jacobsthal[jacobsthal.size() - 2];
+        
+        int next = lastNum + 2 * secondLastNum;
+        jacobsthal.push_back(next);
+    }
+    
+    return jacobsthal;
+}
+
+
+std::vector<int> PmergeMe::getInsertPos(std::vector<int> &jacobSeq, size_t size)
+{
+    std::vector<int> order;
+    std::vector<bool> used(size, false);
+    used[0] = true;
+
+    for (size_t i = 1; i < jacobSeq.size() && jacobSeq[i] < static_cast<int>(size); i++)
+    {
+        if (!used[jacobSeq[i]]) {
+            order.push_back(jacobSeq[i]);
+            used[jacobSeq[i]] = true;
+        }
+        
+        for (int j = jacobSeq[i] - 1; j > jacobSeq[i-1]; j--) {
+            if (j < (int)size && !used[j]) {
+                order.push_back(j);
+                used[j] = true;
+            }
+        }
+    }
+
+    for (size_t i = 1; i < size; i++) {
+        if (!used[i]) {
+            order.push_back(i);
+        }
+    }
+
+    return order;
+}`}
             </pre>
           </div>
         );
@@ -698,19 +680,23 @@ const InsertionOrderVisualizer = () => {
               </h3>
               <ol className="list-decimal list-inside space-y-2 text-sm">
                 <li className="text-gray-700">
+                  The algorithm first generates a Jacobsthal sequence to
+                  determine optimal insertion points
+                </li>
+                <li className="text-gray-700">
                   The first index (0) is always pre-marked as inserted
                 </li>
                 <li className="text-gray-700">
-                  We use Jacobsthal numbers as priority indices for insertion
+                  The algorithm processes each Jacobsthal number as an insertion
+                  index
                 </li>
                 <li className="text-gray-700">
-                  After inserting a Jacobsthal index, we fill in all indices
+                  After inserting a Jacobsthal index, it fills in all indices
                   between the current and previous Jacobsthal number in
                   descending order
                 </li>
                 <li className="text-gray-700">
-                  Finally, we check for any remaining indices that haven't been
-                  inserted yet
+                  Finally, it adds any remaining indices that weren't covered
                 </li>
               </ol>
 
@@ -724,7 +710,7 @@ const InsertionOrderVisualizer = () => {
                 <p className="text-sm text-gray-700">
                   The Jacobsthal sequence (0, 1, 1, 3, 5, 11, 21, 43, ...)
                   creates an optimal insertion pattern that minimizes
-                  comparisons during the merge-insertion sort algorithm.
+                  comparisons during the Ford-Johnson algorithm.
                 </p>
 
                 <div className="mt-4 bg-white p-3 rounded border border-blue-100">
@@ -911,7 +897,7 @@ const InsertionOrderVisualizer = () => {
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3 text-white">
         <h2 className="text-xl font-bold">Insertion Order Calculation</h2>
         <p className="text-sm text-blue-100 mt-0.5">
-          Visualizing the Ford-Johnson algorithm's insertion order calculation
+          Visualizing the PmergeMe algorithm's insertion order calculation
         </p>
       </div>
 
@@ -1324,9 +1310,8 @@ const InsertionOrderVisualizer = () => {
       {/* Footer with extra information */}
       <div className="bg-gray-50 border-t px-4 py-3 text-xs text-gray-500">
         <p>
-          The Ford-Johnson algorithm (also known as merge-insertion sort) is
-          designed to minimize the number of comparisons needed to sort an
-          array.
+          PmergeMe visualizer - Ford-Johnson algorithm's insertion order
+          calculation
         </p>
       </div>
     </div>

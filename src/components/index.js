@@ -6,7 +6,7 @@ import * as UI from './UI';
 import * as Visualization from './Visualization';
 
 export {
-  FordJohnsonDemo,
+  //FordJohnsonDemo,
   FordJohnsonVisualizer,
   Algorithm,
   UI,

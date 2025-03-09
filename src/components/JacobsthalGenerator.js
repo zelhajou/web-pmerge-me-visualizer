@@ -1,52 +1,109 @@
 import React, { useState, useEffect } from 'react';
-import { Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight } from 'lucide-react';
 
+/**
+ * JacobsthalGenerator component that visualizes the Jacobsthal sequence generation
+ * Matches the implementation in PmergeMe.cpp getJacob function
+ */
 const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) => {
   const [expanded, setExpanded] = useState(false);
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   
-  // Generate calculation steps
+  // Generate calculation steps - based on getJacob implementation
   useEffect(() => {
     if (!jacobsthalSequence || jacobsthalSequence.length === 0) return;
     
     const generationSteps = [];
-    // Add base cases
+    
+    // Initial setup - add the first two elements
     generationSteps.push({
       index: 0,
       value: 0,
-      explanation: "Base case: J(0) = 0",
-      formula: "J(0) = 0"
+      explanation: "Initial setup: Add first element to sequence",
+      formula: "jacobsthal.push_back(0);",
+      isBaseCase: true
     });
     
     if (jacobsthalSequence.length > 1) {
       generationSteps.push({
         index: 1,
         value: 1,
-        explanation: "Base case: J(1) = 1",
-        formula: "J(1) = 1"
+        explanation: "Initial setup: Add second element to sequence",
+        formula: "jacobsthal.push_back(1);",
+        isBaseCase: true
       });
     }
     
-    // Add computation steps
+    // Generate additional elements using the recurrence relation
     for (let i = 2; i < jacobsthalSequence.length; i++) {
-      const prev1 = jacobsthalSequence[i-1];
-      const prev2 = jacobsthalSequence[i-2];
+      const lastNum = jacobsthalSequence[i-1];
+      const secondLastNum = jacobsthalSequence[i-2];
+      
+      // Step to get values
       generationSteps.push({
         index: i,
+        phase: "access",
         value: jacobsthalSequence[i],
-        explanation: `Calculate J(${i}) using the recurrence relation`,
-        formula: `J(${i}) = J(${i-1}) + 2×J(${i-2})`,
-        calculation: `J(${i}) = ${prev1} + 2×${prev2} = ${prev1 + 2*prev2}`,
-        prev1Index: i-1,
-        prev2Index: i-2
+        explanation: `Access previous elements for calculation`,
+        formula: `int lastNum = jacobsthal.back(); // ${lastNum}\nint secondLastNum = jacobsthal[jacobsthal.size() - 2]; // ${secondLastNum}`,
+        lastNumIndex: i-1,
+        secondLastNumIndex: i-2,
+        isCalculation: true
       });
+      
+      // Step to calculate new value
+      generationSteps.push({
+        index: i,
+        phase: "calculate",
+        value: jacobsthalSequence[i],
+        explanation: `Calculate next element using recurrence relation`,
+        formula: `int next = lastNum + 2 * secondLastNum;`,
+        calculation: `next = ${lastNum} + 2 * ${secondLastNum} = ${lastNum + 2 * secondLastNum}`,
+        lastNumIndex: i-1,
+        secondLastNumIndex: i-2,
+        isCalculation: true
+      });
+      
+      // Step to add the new value
+      generationSteps.push({
+        index: i,
+        phase: "push",
+        value: jacobsthalSequence[i],
+        explanation: `Add new element to the sequence`,
+        formula: `jacobsthal.push_back(next); // ${jacobsthalSequence[i]}`,
+        lastNumIndex: i-1,
+        secondLastNumIndex: i-2,
+        isAddition: true
+      });
+      
+      // Step to check if we should continue
+      if (i < jacobsthalSequence.length - 1) {
+        generationSteps.push({
+          index: i,
+          phase: "check",
+          value: jacobsthalSequence[i],
+          explanation: `Check if we need to continue: ${jacobsthalSequence[i]} < ${pairsSize}`,
+          formula: `while (jacobsthal.back() < static_cast<int>(size))`,
+          condition: `${jacobsthalSequence[i]} < ${pairsSize} → continue`,
+          isCheck: true
+        });
+      } else {
+        generationSteps.push({
+          index: i,
+          phase: "final",
+          value: jacobsthalSequence[i],
+          explanation: `Jacobsthal sequence generation complete`,
+          formula: `return jacobsthal; // Sequence: [${jacobsthalSequence.join(", ")}]`,
+          isComplete: true
+        });
+      }
     }
     
     setSteps(generationSteps);
     setCurrentStep(0);
-  }, [jacobsthalSequence]);
+  }, [jacobsthalSequence, pairsSize]);
   
   // Autoplay functionality
   useEffect(() => {
@@ -63,10 +120,19 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
   }, [isPlaying, currentStep, steps.length]);
   
   // Current step data
-  const currentStepData = steps[currentStep] || { index: 0, value: 0, explanation: "", formula: "" };
+  const currentStepData = steps[currentStep] || { 
+    index: 0, 
+    value: 0, 
+    explanation: "", 
+    formula: "" 
+  };
   
   // Visible sequence up to current step
-  const visibleSequence = jacobsthalSequence.slice(0, currentStepData.index + 1);
+  const visibleSequence = jacobsthalSequence.slice(0, 
+    currentStepData.phase === "push" || currentStepData.phase === "check" || currentStepData.phase === "final" 
+      ? currentStepData.index + 1 
+      : currentStepData.index
+  );
   
   if (!jacobsthalSequence || jacobsthalSequence.length === 0) {
     return null;
@@ -91,7 +157,7 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
       {expanded && (
         <div className="p-3 bg-white">
           <div className="text-sm text-gray-600 mb-2">
-            This visualization shows how the Jacobsthal sequence used for insertion order is calculated step by step.
+            This visualization shows how the Jacobsthal sequence is calculated using the same algorithm as in PmergeMe.cpp.
           </div>
           
           {/* Sequence display */}
@@ -101,9 +167,9 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
                 <div 
                   key={idx} 
                   className={`flex flex-col items-center ${
-                    currentStepData.prev1Index === idx 
+                    currentStepData.lastNumIndex === idx 
                       ? 'ring-2 ring-blue-400' 
-                      : currentStepData.prev2Index === idx 
+                      : currentStepData.secondLastNumIndex === idx 
                       ? 'ring-2 ring-green-400' 
                       : idx === currentStepData.index 
                       ? 'ring-2 ring-purple-400 animate-pulse' 
@@ -117,12 +183,13 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
                 </div>
               ))}
               
-              {currentStepData.index < jacobsthalSequence.length - 1 && (
+              {currentStepData.phase !== "push" && currentStepData.phase !== "check" && currentStepData.phase !== "final" && 
+               currentStepData.index >= visibleSequence.length && (
                 <div className="flex flex-col items-center opacity-50">
                   <div className="bg-gray-100 px-2 py-1 rounded-md text-gray-800 font-mono text-sm border border-dashed">
                     ?
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">J({currentStepData.index + 1})</div>
+                  <div className="text-xs text-gray-500 mt-0.5">J({currentStepData.index})</div>
                 </div>
               )}
             </div>
@@ -141,6 +208,7 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
                 isPlaying ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
               }`}
             >
+              {isPlaying ? <Pause size={14} className="inline mr-1" /> : <Play size={14} className="inline mr-1" />}
               {isPlaying ? 'Pause' : 'Play Animation'}
             </button>
             
@@ -150,28 +218,28 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
                 disabled={currentStep === 0}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ⏮
+                <SkipBack size={14} />
               </button>
               <button 
                 onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                 disabled={currentStep === 0}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ◀
+                <ChevronLeft size={14} />
               </button>
               <button 
                 onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
                 disabled={currentStep >= steps.length - 1}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ▶
+                <ChevronRight size={14} />
               </button>
               <button 
                 onClick={() => setCurrentStep(steps.length - 1)}
                 disabled={currentStep >= steps.length - 1}
                 className="p-1 bg-gray-100 rounded disabled:opacity-50"
               >
-                ⏭
+                <SkipForward size={14} />
               </button>
             </div>
             
@@ -180,26 +248,66 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
             </div>
           </div>
           
-          {/* Current calculation */}
-          <div className="bg-indigo-50 rounded-md p-2 mb-3 border border-indigo-100">
-            <div className="font-medium text-sm text-indigo-800 mb-1">
+          {/* Current step explanation */}
+          <div className={`rounded-md p-2 mb-3 border ${
+            currentStepData.isBaseCase ? 'bg-blue-50 border-blue-100' : 
+            currentStepData.isCalculation ? 'bg-indigo-50 border-indigo-100' :
+            currentStepData.isAddition ? 'bg-green-50 border-green-100' :
+            currentStepData.isCheck ? 'bg-yellow-50 border-yellow-100' :
+            currentStepData.isComplete ? 'bg-purple-50 border-purple-100' :
+            'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="font-medium text-sm mb-1">
               {currentStepData.explanation}
             </div>
             
-            <div className="font-mono text-sm">
-              {currentStepData.formula}
+            <div className="font-mono text-xs mb-1 p-1 bg-white bg-opacity-70 rounded border border-gray-100">
+              {currentStepData.formula.split('\n').map((line, idx) => 
+                <div key={idx}>{line}</div>
+              )}
             </div>
             
             {currentStepData.calculation && (
-              <div className="font-mono text-sm mt-1 bg-white p-1 rounded border border-indigo-100">
+              <div className="font-mono text-xs mt-1 bg-white p-1 rounded border border-indigo-100">
                 {currentStepData.calculation}
+              </div>
+            )}
+            
+            {currentStepData.condition && (
+              <div className="font-mono text-xs mt-1 bg-white p-1 rounded border border-yellow-100">
+                {currentStepData.condition}
               </div>
             )}
           </div>
           
+          {/* C++ Code */}
+          <div className="mb-3">
+            <div className="font-medium text-sm mb-1">C++ Implementation:</div>
+            <pre className="text-xs bg-gray-50 p-2 rounded-md border overflow-x-auto font-mono">
+{`std::vector<int> PmergeMe::getJacob(size_t size)
+{
+    std::vector<int> jacobsthal;
+    jacobsthal.push_back(0);
+    jacobsthal.push_back(1);
+    
+    while (jacobsthal.back() < static_cast<int>(size))
+    {
+        int lastNum = jacobsthal.back();
+        int secondLastNum = jacobsthal[jacobsthal.size() - 2];
+        
+        int next = lastNum + 2 * secondLastNum;
+        jacobsthal.push_back(next);
+    }
+    
+    return jacobsthal;
+}`}</pre>
+          </div>
+          
           {/* Final sequence */}
           <div className="bg-gray-50 rounded-md p-2 text-sm">
-            <div className="font-medium mb-1">Final Jacobsthal Sequence (used for insertion order):</div>
+            <div className="font-medium mb-1">
+              Final Jacobsthal Sequence (used for insertion order):
+            </div>
             <div className="font-mono overflow-x-auto whitespace-nowrap text-xs">
               {jacobsthalSequence.map((value, idx) => (
                 <span key={idx} className="mr-1">
@@ -208,7 +316,7 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
               ))}
             </div>
             <div className="text-xs text-gray-500 mt-2">
-              Note: The Jacobsthal sequence grows rapidly and provides an optimal insertion order for the Ford-Johnson algorithm.
+              Note: The sequence is used to determine the optimal insertion order for the PmergeMe algorithm.
             </div>
           </div>
           
@@ -217,8 +325,8 @@ const JacobsthalGenerator = ({ pairsSize, jacobsthalSequence, className = "" }) 
             <div className="mt-3 bg-blue-50 p-2 rounded-md border border-blue-100 text-sm">
               <div className="font-medium mb-1">Relationship to Insertion Order:</div>
               <div>
-                For {pairsSize} pairs, we use Jacobsthal numbers that are less than {pairsSize}:
-                {' '}{jacobsthalSequence.filter(n => n > 0 && n < pairsSize).join(', ')}
+                For {pairsSize} pairs, we use Jacobsthal numbers that are less than {pairsSize}:{' '}
+                {jacobsthalSequence.filter(n => n > 0 && n < pairsSize).join(', ')}
               </div>
               <div className="text-xs text-gray-600 mt-1">
                 These values become the primary indices for insertion, with gaps filled in descending order.
