@@ -1,3 +1,4 @@
+// src/components/Visualization/BinarySearchVisualization.js
 import React from 'react';
 
 const BinarySearchVisualization = ({ binarySearch }) => {
@@ -57,6 +58,9 @@ const BinarySearchVisualization = ({ binarySearch }) => {
           <div className="text-sm mb-2">
             Searching for value: <span className="font-mono bg-blue-100 px-2 py-0.5 rounded-md">{value}</span>
           </div>
+          <div className="text-sm mb-2">
+            In array: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded-md">[{array.join(', ')}]</span>
+          </div>
           <ol className="list-decimal pl-5 space-y-1">
             {steps.map((step, idx) => (
               <li key={idx} className={`font-mono text-xs ${idx === steps.length - 1 ? 'text-green-700 font-bold' : ''}`}>
@@ -74,9 +78,6 @@ const BinarySearchVisualization = ({ binarySearch }) => {
 
   // Create a visual animation of the binary search process
   const renderSearchAnimation = () => {
-    // This function generates a visual representation of how binary search
-    // divides the search space in each step
-
     // Parse the steps to extract left, right, and mid indices
     const searchAnimations = steps.map(step => {
       const midMatch = step.match(/mid=(\d+)/);

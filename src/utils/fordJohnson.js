@@ -56,6 +56,7 @@ export function generateInsertionOrder(jacobSeq, size) {
   return order;
 }
 
+
 /**
  * Binary search to find insertion position
  * @param {Array} arr - Sorted array to search in
@@ -67,13 +68,19 @@ export function binarySearch(arr, value) {
   let right = arr.length - 1;
   const steps = [];
   
+  // Handle empty array case
+  if (arr.length === 0) {
+    steps.push(`Empty array, position = 0`);
+    return { position: 0, steps, array: arr };
+  }
+  
   while (left <= right) {
     const mid = Math.floor((left + right) / 2);
     steps.push(`mid=${mid}, arr[${mid}]=${arr[mid]}, ${value}${value > arr[mid] ? ">" : "<"}${arr[mid]}, go ${value > arr[mid] ? "right" : "left"}`);
     
     if (arr[mid] === value) {
       steps.push(`Found at position = ${mid}`);
-      return { position: mid, steps };
+      return { position: mid, steps, array: arr };
     }
     
     if (arr[mid] < value) {
@@ -84,7 +91,7 @@ export function binarySearch(arr, value) {
   }
   
   steps.push(`position = ${left}`);
-  return { position: left, steps };
+  return { position: left, steps, array: arr };
 }
 
 /**

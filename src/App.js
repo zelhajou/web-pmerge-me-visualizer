@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { CodeSquare, Code, GitBranch } from "lucide-react";
+import {
+  CodeSquare,
+  Code,
+  GitBranch,
+  Github,
+  ExternalLink,
+} from "lucide-react";
 import { AlgorithmControls } from "./components/Algorithm";
 import AlgorithmStepDetail from "./components/Algorithm/AlgorithmStepDetail";
 import AlgorithmComparison from "./components/AlgorithmComparison";
@@ -14,6 +20,8 @@ import InsertionOrderVisualizer from "./components/InsertionOrderVisualizer";
 // Custom hook imports
 import { usePlayback } from "./hooks/usePlayback";
 import { generateAlgorithmSteps } from "./utils/algorithmSteps";
+
+import AlgorithmExplanation from "./components/AlgorithmExplanation";
 
 const App = () => {
   // Get the initial input array from the URL or use default
@@ -106,6 +114,10 @@ const App = () => {
     },
   ];
 
+  // Repository URLs
+  const cppRepoUrl = "https://github.com/zelhajou/ft_cpp_modules";
+  const projectRepoUrl = "https://github.com/zelhajou/web-pmerge-me-visualizer";
+
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gray-50">
       {/* Header with responsive design */}
@@ -189,6 +201,7 @@ const App = () => {
                   </button>
                 </li>
               ))}
+              {/* No repository links in mobile menu */}
             </ul>
           </nav>
         </div>
@@ -199,6 +212,13 @@ const App = () => {
         <div className="flex-1 overflow-hidden">
           {activeView === "algorithm" && (
             <div className="h-full flex flex-col">
+              {/* Algorithm explanation */}
+              {activeView === "algorithm" && (
+                <div className="mb-4">
+                  <AlgorithmExplanation />
+                </div>
+              )}
+
               <div className="mb-4 bg-white p-3 rounded-lg shadow-sm border">
                 <AlgorithmControls
                   inputArray={inputArray}
@@ -225,7 +245,7 @@ const App = () => {
                   totalSteps={executionSteps.length}
                 />
               </div>
-              
+
               {/* Main visualization area */}
               <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Left: Code and Call Stack */}
@@ -260,14 +280,52 @@ const App = () => {
         </div>
       </main>
 
-      {/* Footer with clearer attribution */}
-      <footer className="bg-gray-800 text-white py-3 text-center">
-        <p className="text-sm">
-          PmergeMe Visualizer — Ford-Johnson Algorithm Implementation
-        </p>
-        <p className="text-xs text-gray-400 mt-1">
-          Updated to match the C++ implementation in PmergeMe.cpp
-        </p>
+      {/* Enhanced footer with description and repository links */}
+      <footer className="bg-gray-800 text-white py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="text-center md:text-left mb-4 md:mb-0">
+              <h3 className="text-lg font-bold">PmergeMe Visualizer</h3>
+              <p className="text-sm text-gray-300 mt-1">
+                An interactive visualization of the Ford-Johnson algorithm
+                (merge-insertion sort)
+              </p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3 md:items-center">
+              <a
+                href={cppRepoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+              >
+                <Github size={16} className="mr-2" />
+                <span>C++ Exercise Repository</span>
+              </a>
+
+              <a
+                href={projectRepoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-md transition-colors"
+              >
+                <Github size={16} className="mr-2" />
+                <span>Visualizer Project Repository</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-700 mt-4 pt-4 text-center text-xs text-gray-400">
+            <p>
+              This visualizer demonstrates the PmergeMe implementation using the
+              Ford-Johnson algorithm, also known as merge-insertion sort.
+            </p>
+            <p className="mt-1">
+              The algorithm optimizes comparisons using the Jacobsthal sequence
+              for insertion order, providing efficient sorting.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );

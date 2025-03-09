@@ -210,13 +210,13 @@ const MemoryStateVisualization = ({ memoryState }) => {
   const renderBinarySearch = () => {
     if (!memoryState.binarySearch) return null;
     const binarySearch = memoryState.binarySearch;
-
+  
     return (
       <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
         <h3 className="font-semibold text-blue-700 mb-1">Binary Search:</h3>
         <div className="text-sm">
           <p className="mb-1">Searching for: <span className="font-mono bg-blue-100 px-1 py-0.5 rounded">{binarySearch.value}</span></p>
-          <p className="mb-1">In array: {binarySearch.array.join(', ')}</p>
+          <p className="mb-1">In array: <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">[{binarySearch.array.join(', ')}]</span></p>
           <div className="bg-white p-2 rounded border border-blue-100">
             <p className="font-medium mb-1 text-xs">Steps:</p>
             <ol className="list-decimal list-inside text-xs">
@@ -231,7 +231,7 @@ const MemoryStateVisualization = ({ memoryState }) => {
       </div>
     );
   };
-
+  
   // Determine if there are variable changes or operations
   const hasMetadata = (memoryState.operations && memoryState.operations.length > 0) || 
                      (memoryState.changes && memoryState.changes.length > 0);
