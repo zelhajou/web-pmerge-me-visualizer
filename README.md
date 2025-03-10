@@ -2,7 +2,7 @@
 
 A web application that visualizes the Ford-Johnson (merge-insert) sorting algorithm step by step.
 
-<img width="1621" alt="Screen Shot 2025-03-06 at 12 16 58 AM" src="https://github.com/user-attachments/assets/8cfe9255-3192-414c-9ead-ec7551bbabaf" />
+<img width="1713" alt="Screen Shot 2025-03-10 at 1 41 55 AM" src="https://github.com/user-attachments/assets/a3604d04-3421-4585-8aec-f4deb0edc2a5" />
 
 
 ## Features
