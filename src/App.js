@@ -207,9 +207,9 @@ const App = () => {
         </div>
       )}
 
-      <main className="flex-1 overflow-hidden container mx-auto px-4 py-4 flex flex-col">
+      <main className="flex-1 overflow-y-auto container mx-auto px-4 py-4 flex flex-col">
         {/* Main Content Area - Changes based on active view */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1">
           {activeView === "algorithm" && (
             <div className="h-full flex flex-col">
               {/* Algorithm explanation */}
